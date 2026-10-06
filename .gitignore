@@ -9,6 +9,10 @@ lerna-debug.log*
 package-lock.json
 node_modules
 dist/
+dist-*/
+.private/
+backups/
+runtime/
 save/
 dist-web/
 dist-ssr

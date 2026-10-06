@@ -1,6 +1,7 @@
 <script lang="ts">
 
     import Suggestion from './Suggestion.svelte';
+    import ActivePersonaBadge from './ActivePersonaBadge.svelte';
     import { CameraIcon, DatabaseIcon, DicesIcon, GlobeIcon, ImagePlusIcon, LanguagesIcon, Laugh, MenuIcon, MicOffIcon, PackageIcon, Plus, RefreshCcwIcon, ReplyIcon, Send, StepForwardIcon, XIcon, BrainIcon, ArrowDown, SparkleIcon } from "@lucide/svelte";
     import { selectedCharID, PlaygroundStore, createSimpleCharacter, hypaV3ModalOpen, ScrollToMessageStore, additionalChatMenu, additionalFloatingActionButtons, easyPanelStore, chatPanelStore } from "../../ts/stores.svelte";
     import { tick } from 'svelte';
@@ -349,7 +350,7 @@
         }
     }
 
-    let { userIconPortrait, currentUsername, userIcon } = $derived.by(() => {
+    let { userIconPortrait, currentUsername, userIcon, isPersonaBound } = $derived.by(() => {
         const bindedPersona = DBState?.db?.characters?.[$selectedCharID]?.chats?.[DBState?.db?.characters?.[$selectedCharID]?.chatPage]?.bindedPersona
 
         if(bindedPersona){
@@ -358,16 +359,18 @@
                 return {
                     currentUsername: persona.name,
                     userIconPortrait: persona.largePortrait,
-                    userIcon: persona.icon
+                    userIcon: persona.icon,
+                    isPersonaBound: true
                 }
             }
         }
 
         const selectedPersonaIndex = DBState.db.selectedPersona
         return {
-            currentUsername: DBState.db.username,
-            userIconPortrait: DBState.db.personas[selectedPersonaIndex].largePortrait,
-            userIcon: DBState.db.personas[selectedPersonaIndex].icon
+            currentUsername: DBState.db.username ?? 'User',
+            userIconPortrait: DBState.db.personas[selectedPersonaIndex]?.largePortrait,
+            userIcon: DBState.db.personas[selectedPersonaIndex]?.icon,
+            isPersonaBound: false
         }
     })
 
@@ -509,7 +512,7 @@
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="w-full h-full relative" style={customStyle} onclick={() => {
+<div class="w-full h-full relative flex flex-col" style={customStyle} onclick={() => {
     openMenu = false
 }}>
     
@@ -569,7 +572,8 @@
             {/await}
         {/if}
     {:else}
-        <div class="h-full w-full flex flex-col-reverse overflow-y-auto relative default-chat-screen" onscroll={(e) => {
+        <ActivePersonaBadge name={currentUsername} bound={isPersonaBound} />
+        <div class="min-h-0 flex-1 w-full flex flex-col-reverse overflow-y-auto relative default-chat-screen" onscroll={(e) => {
             //@ts-expect-error scrollHeight/clientHeight/scrollTop don't exist on EventTarget, but target is HTMLElement here
             const scrolled = (e.target.scrollHeight - e.target.clientHeight + e.target.scrollTop)
             if(scrolled < 100 && DBState.db.characters[$selectedCharID].chats[DBState.db.characters[$selectedCharID].chatPage].message.length > loadPages){
