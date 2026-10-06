@@ -2,6 +2,7 @@
 
     import Suggestion from './Suggestion.svelte';
     import ActivePersonaBadge from './ActivePersonaBadge.svelte';
+    import { rememberChatPersona } from 'src/ts/chatPersona';
     import { CameraIcon, DatabaseIcon, DicesIcon, GlobeIcon, ImagePlusIcon, LanguagesIcon, Laugh, MenuIcon, MicOffIcon, PackageIcon, Plus, RefreshCcwIcon, ReplyIcon, Send, StepForwardIcon, XIcon, BrainIcon, ArrowDown, SparkleIcon } from "@lucide/svelte";
     import { selectedCharID, PlaygroundStore, createSimpleCharacter, hypaV3ModalOpen, ScrollToMessageStore, additionalChatMenu, additionalFloatingActionButtons, easyPanelStore, chatPanelStore } from "../../ts/stores.svelte";
     import { tick } from 'svelte';
@@ -59,6 +60,12 @@
     let { openModuleList = $bindable(false), openChatList = $bindable(false), customStyle = '' }: Props = $props();
     let currentCharacter = $derived(DBState.db.characters[$selectedCharID])
     let currentChat = $derived(currentCharacter?.chats[currentCharacter.chatPage]?.message ?? [])
+
+    $effect.pre(() => {
+        const chat = currentCharacter?.chats[currentCharacter.chatPage]
+        if (!chat || chat.message?.[0]?.data?.startsWith(coldStorageHeader)) return
+        rememberChatPersona(chat, DBState.db.personas[DBState.db.selectedPersona])
+    })
 
     function scrollToBottom() {
         chatsInstance?.scrollToLatestMessage();

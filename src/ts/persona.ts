@@ -1,4 +1,5 @@
-import { getDatabase, saveImage, setDatabase } from "./storage/database.svelte"
+import { getCurrentChat, getDatabase, saveImage, setDatabase } from "./storage/database.svelte"
+import { setChatPersona } from "./chatPersona"
 import { selectSingleFile, sleep } from "./util"
 import { alertError, alertNormal, alertStore } from "./alert"
 import { AppendableBuffer, downloadFile, readImage } from "./globalApi.svelte"
@@ -22,7 +23,7 @@ export async function selectUserImg() {
         icon: DBState.db.userIcon,
         personaPrompt: DBState.db.personaPrompt,
         note: DBState.db.userNote,
-        id: v4()
+        id: DBState.db.personas[DBState.db.selectedPersona].id ?? v4()
     }
 }
 
@@ -43,6 +44,19 @@ export function changeUserPersona(id: number, save: 'save' | 'noSave' = 'save') 
     DBState.db.userIcon = pr.icon
     DBState.db.userNote = pr.note
     DBState.db.selectedPersona = id
+}
+
+export function selectPersonaForCurrentChat(id: number) {
+    const persona = DBState.db.personas[id]
+    if (!persona) return
+    const chat = getCurrentChat()
+    if (!chat) {
+        changeUserPersona(id)
+        return
+    }
+    // Commit any edits to the global persona before using the stored entry.
+    saveUserPersona()
+    setChatPersona(chat, persona)
 }
 
 interface PersonaCard {

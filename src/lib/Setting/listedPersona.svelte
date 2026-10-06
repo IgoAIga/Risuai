@@ -2,8 +2,8 @@
     import { XIcon } from "@lucide/svelte";
     import { language } from "../../lang";
     
-    import { DBState } from 'src/ts/stores.svelte';
-    import { changeUserPersona } from "src/ts/persona";
+    import { DBState, selectedCharID } from 'src/ts/stores.svelte';
+    import { selectPersonaForCurrentChat } from "src/ts/persona";
 
 
     interface Props {
@@ -11,6 +11,9 @@
     }
 
     let { close = () => {} }: Props = $props();
+
+    let chat = $derived(DBState.db.characters[$selectedCharID]?.chats[DBState.db.characters[$selectedCharID]?.chatPage]);
+    let activeId = $derived(chat?.bindedPersona || DBState.db.personas[DBState.db.selectedPersona]?.id);
 
 </script>
 
@@ -24,11 +27,14 @@
                 </button>
             </div>
         </div>
+        {#if chat}
+            <p class="text-xs text-textcolor2 mb-3">{language.chatPersonaSelectionHint}</p>
+        {/if}
         {#each DBState.db.personas as persona, i}
             <button onclick={() => {
-                changeUserPersona(i)
+                selectPersonaForCurrentChat(i)
                 close()
-            }} class="flex items-center text-textcolor border-t-1 border-solid border-0 border-darkborderc p-2 cursor-pointer" class:bg-selected={i === DBState.db.selectedPersona}>
+            }} class="flex items-center text-textcolor border-t-1 border-solid border-0 border-darkborderc p-2 cursor-pointer" class:bg-selected={persona.id ? persona.id === activeId : !activeId && i === DBState.db.selectedPersona}>
                 <span class="overflow-x-auto whitespace-nowrap w-full text-left">
                     <span class="font-medium">{persona.name}</span>
                     {#if persona.note}

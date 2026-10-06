@@ -16,13 +16,20 @@ upstream release is `2026.8.240`.
 - CHARX/RISUM module imports show success only after module registration succeeds.
 - A compact persona button above the conversation shows the effective user name.
   A valid chat-bound persona takes priority over the globally selected persona;
-  a lock marks that binding. Clicking opens the existing persona selector. Choosing
-  a global persona does not override an existing chat binding.
+  a lock marks that binding. Clicking opens the persona selector.
+- Opening an unconfigured chat remembers the initial persona using its existing
+  `bindedPersona` field. The quick selector now changes only that chat, even when
+  already pinned. With no active chat it still selects the global default. Persona
+  settings continue to edit the global default. Explicitly unbinding a chat retains
+  upstream's global-follow behavior. Changing an avatar preserves its persona ID.
+  Older unbound conversations have no reliable persona history; choose their
+  intended persona once. Existing bindings and saved chats are not bulk-migrated.
 
 ## Validation
 
 ```sh
 pnpm check
+pnpm exec vitest run src/ts/chatPersona.test.ts
 pnpm build
 node server/node/test-large-import.cjs
 ```

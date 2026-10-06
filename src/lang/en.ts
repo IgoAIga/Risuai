@@ -955,6 +955,7 @@ export const languageEnglish = {
     officialDiscord: "Official Discord",
     officialDiscordDesc: "Official Discord to talk about Risuai",
     persona: "Persona",
+    chatPersonaSelectionHint: "Your selection is saved for this chat only. Other chats keep their own persona.",
     icon: "Icon",
     account: "Account",
     remove: "Remove",

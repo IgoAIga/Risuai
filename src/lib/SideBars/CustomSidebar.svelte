@@ -48,9 +48,6 @@
             }}>{DBState.db.lastLoadedLoadoutName || language.loadouts}</Button>
         {:else if item.type === 'persona'}
             <Button className="flex" onclick={() => {
-                if(bindedPersona){
-                    return
-                }
                 openPersonaList.set(!get(openPersonaList))
             }}>
                 <div class="flex-1 flex-col flex text-left">

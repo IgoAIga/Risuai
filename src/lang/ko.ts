@@ -817,6 +817,7 @@ export const languageKorean = {
     "officialDiscord": "공식 디스코드",
     "officialDiscordDesc": "리스AI에 대해 자유롭게 대화하세요.",
     "persona": "페르소나",
+    "chatPersonaSelectionHint": "선택한 페르소나는 이 채팅에만 저장됩니다. 다른 채팅의 페르소나는 바뀌지 않습니다.",
     "icon": "아이콘",
     "account": "계정",
     "remove": "삭제",
