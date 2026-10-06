@@ -6,6 +6,7 @@ import { base64url, getKeypairStore, saveKeypairStore } from "../util"
 export class NodeStorage{
 
     authChecked = false
+    private writeRetryAt = 0
     JSONStringlifyAndbase64Url(obj:any){
         return base64url(Buffer.from(JSON.stringify(obj), 'utf-8'))
     }
@@ -71,21 +72,44 @@ export class NodeStorage{
 
     async setItem(key:string, value:Uint8Array) {
         await this.checkAuth()
-        const da = await fetch('/api/write', {
-            method: "POST",
-            body: value as any,
-            headers: {
-                'content-type': 'application/octet-stream',
-                'file-path': Buffer.from(key, 'utf-8').toString('hex'),
-                'risu-auth': await this.createAuth()
+        for (let attempt = 0; attempt < 4; attempt++) {
+            // Share the cooldown across concurrent asset saves and sign a fresh JWT
+            // after waiting, rather than retrying with an expired authentication token.
+            while (this.writeRetryAt > Date.now()) {
+                await new Promise(resolve => setTimeout(resolve, this.writeRetryAt - Date.now()))
             }
-        })
-        if(da.status < 200 || da.status >= 300){
-            throw "setItem Error"
-        }
-        const data = await da.json()
-        if(data.error){
-            throw data.error
+            const da = await fetch('/api/write', {
+                method: "POST",
+                body: value as any,
+                headers: {
+                    'content-type': 'application/octet-stream',
+                    'file-path': Buffer.from(key, 'utf-8').toString('hex'),
+                    'risu-auth': await this.createAuth()
+                }
+            })
+            if (da.status === 429 && attempt < 3) {
+                const retryAfter = da.headers.get('Retry-After')
+                const seconds = retryAfter === null ? NaN : Number(retryAfter)
+                const delay = Number.isFinite(seconds)
+                    ? Math.max(0, seconds * 1000)
+                    : Math.max(0, Date.parse(retryAfter ?? '') - Date.now())
+                this.writeRetryAt = Math.max(this.writeRetryAt, Date.now() + (Number.isFinite(delay) ? delay : 60000) + 250)
+                await da.body?.cancel()
+                continue
+            }
+            if(da.status < 200 || da.status >= 300){
+                let detail = ''
+                try {
+                    const body = await da.json()
+                    if (typeof body.error === 'string') detail = `: ${body.error}`
+                } catch { /* An HTML error page is not useful to show in an alert. */ }
+                throw new Error(`setItem Error (HTTP ${da.status})${detail}`)
+            }
+            const data = await da.json()
+            if(data.error){
+                throw new Error(String(data.error))
+            }
+            return
         }
     }
     async getItem(key:string):Promise<Buffer> {

@@ -273,21 +273,25 @@ export async function importModule(){
             }
             const module = convertCharacterToModule(char)
             DBState.db.modules.push(module)
+            alertNormal(language.successImport)
         } catch (error) {
             console.error(error)
-            alertError(language.errors.noData)
+            alertError(`${language.errors.noData}\n${error instanceof Error ? error.message : String(error)}`)
         }
-        alertNormal(language.successImport)
         return
     }
     if(f.name.endsWith('.risum')){
         try {
             const buf = Buffer.from(fileData)
             const module = await readModule(buf)
+            if(!module){
+                return
+            }
             DBState.db.modules.push(module)
+            alertNormal(language.successImport)
         } catch (error) {
             console.error(error)
-            alertError(language.errors.noData)
+            alertError(`${language.errors.noData}\n${error instanceof Error ? error.message : String(error)}`)
         }
         return
     }

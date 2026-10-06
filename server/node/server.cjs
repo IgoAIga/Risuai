@@ -62,6 +62,11 @@ const authenticatedRouteLimiter = rateLimit({
     legacyHeaders: false,
     message: { error: 'Too many requests. Please retry shortly.' }
 });
+// Private, single-user installations can import large asset collections without
+// consuming the shared request quota. Each storage route still checks its JWT.
+const storageRouteLimiter = process.env.RISU_UNLIMITED_STORAGE === '1'
+    ? (_req, _res, next) => next()
+    : authenticatedRouteLimiter;
 const authRouteLimiter = rateLimit({
     windowMs: 60 * 1000,
     max: 2000,
@@ -1180,7 +1185,7 @@ app.post('/api/set_password', async (req, res) => {
     }
 })
 
-app.get('/api/read', authenticatedRouteLimiter, async (req, res, next) => {
+app.get('/api/read', storageRouteLimiter, async (req, res, next) => {
     if(!await checkAuth(req, res)){
         return;
     }
@@ -1212,7 +1217,7 @@ app.get('/api/read', authenticatedRouteLimiter, async (req, res, next) => {
     }
 });
 
-app.get('/api/remove', authenticatedRouteLimiter, async (req, res, next) => {
+app.get('/api/remove', storageRouteLimiter, async (req, res, next) => {
     if(!await checkAuth(req, res)){
         return;
     }
@@ -1244,7 +1249,7 @@ app.get('/api/remove', authenticatedRouteLimiter, async (req, res, next) => {
     
 });
 
-app.get('/api/list', authenticatedRouteLimiter, async (req, res, next) => {
+app.get('/api/list', storageRouteLimiter, async (req, res, next) => {
     if(!await checkAuth(req, res)){
         return;
     }
@@ -1261,7 +1266,7 @@ app.get('/api/list', authenticatedRouteLimiter, async (req, res, next) => {
     }
 });
 
-app.post('/api/write', authenticatedRouteLimiter, async (req, res, next) => {
+app.post('/api/write', storageRouteLimiter, async (req, res, next) => {
     if(!await checkAuth(req, res)){
         return;
     }
