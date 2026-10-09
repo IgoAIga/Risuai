@@ -31,6 +31,10 @@ They are plain text, separate from the author note and model prompt. Switching
 chats destroys the old editor; reopening shows that chat's notes. Branches copy
 the notes with the conversation. This does not change upstream's whole-database
 storage or resolve concurrent-browser save conflicts. No save migration is needed.
+The editor caps new notes at 10,000 UTF-16 code units (including spaces and
+newlines), displays a counter, and rejects oversized pastes before insertion.
+Existing oversized notes are preserved and can be shortened gradually. This is
+an editor limit, not a server request-size restriction on shared asset storage.
 
 Persona settings also keep a library of profile images. Adding an image preserves
 the old one, and selection changes the existing `icon`/`userIcon` fields so bound

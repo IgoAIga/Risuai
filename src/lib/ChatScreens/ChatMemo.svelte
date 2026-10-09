@@ -7,6 +7,43 @@
   let { chat }: { chat: Chat } = $props();
   let dialog: HTMLDialogElement;
   const id = $props.id();
+  const maxLength = 10_000;
+  let rejected = $state(false);
+
+  function updateMemo(input: HTMLTextAreaElement) {
+    const previous = chat.personalMemo ?? "";
+    // Existing oversized notes remain readable and can be shortened gradually.
+    if (
+      input.value.length > maxLength &&
+      input.value.length >= previous.length
+    ) {
+      input.value = previous;
+      rejected = true;
+      return;
+    }
+    chat.personalMemo = input.value;
+    rejected = false;
+  }
+
+  function pasteMemo(event: ClipboardEvent) {
+    if (!event.clipboardData) return;
+    const input = event.currentTarget as HTMLTextAreaElement;
+    const pasted = event.clipboardData.getData("text/plain");
+    // Clipboard CRLF becomes a single newline in a textarea. Check before the
+    // browser inserts or silently truncates the text due to maxlength.
+    const pastedLength =
+      pasted.length > maxLength * 2
+        ? maxLength + 1
+        : pasted.length - (pasted.match(/\r\n/g)?.length ?? 0);
+    const remaining =
+      input.value.length - (input.selectionEnd - input.selectionStart);
+    if (remaining + pastedLength > maxLength) {
+      event.preventDefault();
+      rejected = true;
+    } else {
+      rejected = false;
+    }
+  }
 </script>
 
 <button
@@ -57,11 +94,26 @@
       aria-label={language.chatMemoTitle}
       placeholder={language.chatMemoPlaceholder}
       value={chat.personalMemo ?? ""}
-      oninput={(event) => {
-        chat.personalMemo = event.currentTarget.value;
-      }}
+      maxlength={Math.max(maxLength, (chat.personalMemo ?? "").length)}
+      aria-describedby={`${id}-limit`}
+      onpaste={pasteMemo}
+      oninput={(event) => updateMemo(event.currentTarget)}
       class="block h-[45dvh] min-h-40 max-h-[55dvh] w-full resize-y rounded-md border border-darkborderc bg-darkbg p-3 text-base leading-relaxed text-textcolor placeholder:text-textcolor2 focus:outline-2 focus:outline-borderc"
     ></textarea>
+    <div id={`${id}-limit`} class="mt-2 text-xs text-textcolor2">
+      <p class="m-0 text-right">
+        {(chat.personalMemo ?? "").length.toLocaleString()} / {maxLength.toLocaleString()}
+        {language.chatMemoCharacters}
+      </p>
+      <p class="m-0 mt-1">{language.chatMemoLimitHint}</p>
+      <div role="status" aria-live="polite" class="mt-1 text-draculared">
+        {#if rejected}
+          {language.chatMemoLimitRejected}
+        {:else if (chat.personalMemo ?? "").length > maxLength}
+          {language.chatMemoLegacyLimit}
+        {/if}
+      </div>
+    </div>
     <div class="mt-3 flex justify-end">
       <button
         type="button"

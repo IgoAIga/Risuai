@@ -10,6 +10,10 @@ vi.mock("src/lang", () => ({
     chatMemoHint: "Saved with this chat",
     chatMemoPlaceholder: "Write notes",
     chatMemoClose: "Close",
+    chatMemoCharacters: "characters",
+    chatMemoLimitHint: "Includes spaces and line breaks",
+    chatMemoLimitRejected: "Too long; existing notes kept",
+    chatMemoLegacyLimit: "Existing oversized notes preserved",
   },
 }));
 
@@ -32,6 +36,78 @@ async function hide() {
 afterEach(hide);
 
 describe("per-chat personal notes", () => {
+  function paste(input: HTMLTextAreaElement, text: string) {
+    const event = new Event("paste", { bubbles: true, cancelable: true });
+    Object.defineProperty(event, "clipboardData", {
+      value: { getData: () => text },
+    });
+    input.dispatchEvent(event);
+    flushSync();
+    return event;
+  }
+
+  it("accepts exactly 10,000 characters including spaces and newlines and rejects overflow", () => {
+    const a = chat("A");
+    show(a);
+    const input = document.querySelector("textarea")!;
+    expect(input.maxLength).toBe(10_000);
+    input.value = "가".repeat(9_998) + " \n";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    expect(a.personalMemo).toHaveLength(10_000);
+    input.value += "나";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    flushSync();
+    expect(a.personalMemo).toHaveLength(10_000);
+    expect(input.value).toBe(a.personalMemo);
+    expect(document.querySelector('[role="status"]')!.textContent).toContain(
+      "Too long",
+    );
+  });
+
+  it("rejects an oversized paste before insertion without truncating or replacing existing notes", () => {
+    const a = { ...chat("A"), personalMemo: "Keep this" };
+    show(a);
+    const input = document.querySelector("textarea")!;
+    input.setSelectionRange(0, input.value.length);
+    expect(paste(input, "x".repeat(1_000_000)).defaultPrevented).toBe(true);
+    expect(input.value).toBe("Keep this");
+    expect(a.personalMemo).toBe("Keep this");
+    expect(input.selectionStart).toBe(0);
+    expect(input.selectionEnd).toBe(9);
+  });
+
+  it("counts the selected replacement and normalized Windows newlines for paste", () => {
+    const a = { ...chat("A"), personalMemo: "x".repeat(10_000) };
+    show(a);
+    const input = document.querySelector("textarea")!;
+    input.setSelectionRange(0, 2);
+    expect(paste(input, "가\r\n").defaultPrevented).toBe(false);
+    expect(paste(input, "가나다").defaultPrevented).toBe(true);
+  });
+
+  it("preserves legacy oversized notes and permits gradual shortening, not growth", () => {
+    const a = { ...chat("A"), personalMemo: "x".repeat(12_000) };
+    show(a);
+    const input = document.querySelector("textarea")!;
+    expect(input.value).toHaveLength(12_000);
+    expect(document.querySelector('[role="status"]')!.textContent).toContain(
+      "preserved",
+    );
+    expect(document.querySelector('[id$="-limit"]')!.textContent).toContain(
+      "12,000 / 10,000",
+    );
+    input.value = "x".repeat(11_000);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    expect(a.personalMemo).toHaveLength(11_000);
+    input.value += "x";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    expect(a.personalMemo).toHaveLength(11_000);
+    expect(input.value).toHaveLength(11_000);
+    input.value = "Reduced";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    expect(a.personalMemo).toBe("Reduced");
+  });
+
   it("opens and closes the dialog without clearing notes", () => {
     const a = { ...chat("A"), personalMemo: "Keep this" };
     show(a);
