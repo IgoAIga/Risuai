@@ -1815,6 +1815,8 @@ interface ComfyConfig{
 export type FormatingOrderItem = 'main'|'jailbreak'|'chats'|'lorebook'|'globalNote'|'authorNote'|'lastChat'|'description'|'postEverything'|'personaPrompt'
 
 export interface Chat{
+    /** User-only notes; never inserted into the model prompt. */
+    personalMemo?:string
     message: Message[]
     note:string
     name:string

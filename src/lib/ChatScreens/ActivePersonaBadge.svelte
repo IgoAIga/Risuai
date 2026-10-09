@@ -6,7 +6,7 @@
   let { name, bound = false }: { name: string; bound?: boolean } = $props();
 </script>
 
-<div class="flex shrink-0 min-w-0 justify-end px-3 py-1">
+<div class="flex min-w-0 justify-end">
   <button
     type="button"
     class="flex min-w-0 max-w-full items-center gap-1.5 rounded-md border border-darkborderc bg-bgcolor/90 px-2 py-1 text-xs text-textcolor2 hover:bg-selected hover:text-textcolor focus-visible:outline-2 focus-visible:outline-textcolor"

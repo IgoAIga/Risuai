@@ -2,6 +2,7 @@
 
     import Suggestion from './Suggestion.svelte';
     import ActivePersonaBadge from './ActivePersonaBadge.svelte';
+    import ChatMemo from './ChatMemo.svelte';
     import { rememberChatPersona } from 'src/ts/chatPersona';
     import { CameraIcon, DatabaseIcon, DicesIcon, GlobeIcon, ImagePlusIcon, LanguagesIcon, Laugh, MenuIcon, MicOffIcon, PackageIcon, Plus, RefreshCcwIcon, ReplyIcon, Send, StepForwardIcon, XIcon, BrainIcon, ArrowDown, SparkleIcon } from "@lucide/svelte";
     import { selectedCharID, PlaygroundStore, createSimpleCharacter, hypaV3ModalOpen, ScrollToMessageStore, additionalChatMenu, additionalFloatingActionButtons, easyPanelStore, chatPanelStore } from "../../ts/stores.svelte";
@@ -579,7 +580,14 @@
             {/await}
         {/if}
     {:else}
-        <ActivePersonaBadge name={currentUsername} bound={isPersonaBound} />
+        <div class="flex shrink-0 min-w-0 items-center justify-end gap-2 px-3 py-1">
+            {#if currentCharacter?.chats[currentCharacter.chatPage]}
+                {#key currentCharacter.chats[currentCharacter.chatPage]}
+                    <ChatMemo chat={currentCharacter.chats[currentCharacter.chatPage]} />
+                {/key}
+            {/if}
+            <ActivePersonaBadge name={currentUsername} bound={isPersonaBound} />
+        </div>
         <div class="min-h-0 flex-1 w-full flex flex-col-reverse overflow-y-auto relative default-chat-screen" onscroll={(e) => {
             //@ts-expect-error scrollHeight/clientHeight/scrollTop don't exist on EventTarget, but target is HTMLElement here
             const scrolled = (e.target.scrollHeight - e.target.clientHeight + e.target.scrollTop)

@@ -25,11 +25,19 @@ upstream release is `2026.8.240`.
   Older unbound conversations have no reliable persona history; choose their
   intended persona once. Existing bindings and saved chats are not bulk-migrated.
 
+Per-chat personal notes are available beside the persona badge. Notes update the
+chat's optional `personalMemo` field on input and use normal database autosaving.
+They are plain text, separate from the author note and model prompt. Switching
+chats destroys the old editor; reopening shows that chat's notes. Branches copy
+the notes with the conversation. This does not change upstream's whole-database
+storage or resolve concurrent-browser save conflicts. No save migration is needed.
+
 ## Validation
 
 ```sh
 pnpm check
 pnpm exec vitest run src/ts/chatPersona.test.ts
+pnpm exec vitest run src/lib/ChatScreens/ChatMemo.test.ts
 pnpm build
 node server/node/test-large-import.cjs
 ```
