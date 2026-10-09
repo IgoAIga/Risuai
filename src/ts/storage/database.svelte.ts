@@ -790,6 +790,7 @@ export interface DynamicOutput {
 }
 
 export interface RisuPersona {
+    profileImages?:string[]
     personaPrompt:string
     name:string
     icon:string

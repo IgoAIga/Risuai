@@ -1002,6 +1002,7 @@ export function getUncleanablesSync(db: Database, uptype: 'basename' | 'pure' = 
     if (db.personas) {
         db.personas.map((v) => {
             addUncleanable(v.icon);
+            v.profileImages?.forEach(addUncleanable);
 
             if(v.embeddedModule){
                 const assets = v.embeddedModule.assets
@@ -1051,6 +1052,10 @@ export function replaceDbResources(db: Database, replacer: { [key: string]: stri
 
     db.customBackground = replaceData(db.customBackground);
     db.userIcon = replaceData(db.userIcon);
+    for (const persona of db.personas ?? []) {
+        persona.icon = replaceData(persona.icon);
+        if (persona.profileImages) persona.profileImages = persona.profileImages.map(replaceData);
+    }
 
     for (const cha of db.characters) {
         if (cha.image) {

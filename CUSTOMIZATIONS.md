@@ -32,12 +32,20 @@ chats destroys the old editor; reopening shows that chat's notes. Branches copy
 the notes with the conversation. This does not change upstream's whole-database
 storage or resolve concurrent-browser save conflicts. No save migration is needed.
 
+Persona settings also keep a library of profile images. Adding an image preserves
+the old one, and selection changes the existing `icon`/`userIcon` fields so bound
+chats use the selected portrait. Each thumbnail can export a PNG persona card
+without changing the active portrait. Only the chosen image goes into that card;
+the image library stays in the database. Optional `profileImages` references are
+included in resource cleanup protection and storage resource remapping.
+
 ## Validation
 
 ```sh
 pnpm check
 pnpm exec vitest run src/ts/chatPersona.test.ts
 pnpm exec vitest run src/lib/ChatScreens/ChatMemo.test.ts
+pnpm exec vitest run src/ts/personaImages.test.ts src/ts/personaExport.test.ts src/lib/Setting/PersonaImages.test.ts
 pnpm build
 node server/node/test-large-import.cjs
 ```

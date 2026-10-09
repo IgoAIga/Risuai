@@ -7,7 +7,8 @@
     import TextInput from "src/lib/UI/GUI/TextInput.svelte";
     import { alertConfirm, alertSelect } from "src/ts/alert";
     import { getCharImage } from "src/ts/characters";
-    import { changeUserPersona, exportUserPersona, importUserPersona, saveUserPersona, selectUserImg } from "src/ts/persona";
+    import { changeUserPersona, exportUserPersona, importUserPersona, saveUserPersona, selectUserImg, useUserImage, removeUserImage } from "src/ts/persona";
+    import PersonaImages from '../PersonaImages.svelte';
     import Sortable from 'sortablejs/modular/sortable.core.esm.js';
     import { onDestroy, onMount } from "svelte";
     import { sleep, sortableOptions } from "src/ts/util";
@@ -117,7 +118,7 @@
 
 <div class="flex w-full items-starts rounded-md border-darkborderc border p-4 max-w-full flex-wrap">
     <div class="flex flex-col mt-4 mr-4">
-        <button onclick={() => {selectUserImg()}}>
+        <button title={language.personaImagesAdd} onclick={() => {selectUserImg()}}>
             {#if DBState.db.userIcon === ''}
                 <div class="rounded-md h-28 w-28 shadow-lg bg-textcolor2 cursor-pointer hover:text-green-500"></div>
             {:else}
@@ -138,8 +139,9 @@
         {/if}
         <span class="text-sm text-textcolor2">{language.description}</span>
         <TextAreaInput autocomplete="off" bind:value={DBState.db.personaPrompt} placeholder={`Put the description of this persona here.\nExample: [<user> is a 20 year old girl.]`} />
+        <PersonaImages persona={DBState.db.personas[DBState.db.selectedPersona]} onadd={selectUserImg} onselect={useUserImage} onexport={exportUserPersona} onremove={removeUserImage} />
         <div class="flex gap-2 mt-4 max-w-full flex-wrap">
-            <Button onclick={exportUserPersona}>{language.export}</Button>
+            <Button onclick={() => exportUserPersona()}>{language.export}</Button>
             <Button onclick={importUserPersona}>{language.import}</Button>
 
             <Button styled="danger" onclick={async () => {
